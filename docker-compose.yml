@@ -1,0 +1,76 @@
+version: '3.6'
+services:
+  mysql:
+    image: mysql:5.7
+    ports: 
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=admin
+      - MYSQL_DATABASE=example
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=admin
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks: 
+      - logstash_network
+  flyway:
+    image: boxfuse/flyway
+    command: -url=jdbc:mysql://mysql:3306/example?useSSL=false -schemas=example -user=admin -password=admin -driver=com.mysql.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
+    environment:
+      - FLYWAY_EDITION=community
+    volumes:
+      - ./flyway/sql/:/flyway/sql/
+    networks: 
+      - logstash_network
+    depends_on: 
+      - mysql
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
+    ports:
+      - 9300:9300
+      - 9200:9200
+    environment:
+      - transport.host=127.0.0.1
+      - cluster.name=docker-cluster
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - logstash_network
+  kibana:
+    image: docker.elastic.co/kibana/kibana:6.5.4
+    ports:
+      - 5601:5601
+    networks:
+      - logstash_network
+    depends_on: 
+      - elasticsearch
+  logstash:
+    build: ./logstash/
+    image: dimmaryanto93/logstash-jdbc-plugin:1.1
+    environment:
+      - LOGSTASH_JDBC_URL=jdbc:mysql://mysql:3306/example?useSSL=false
+      - LOGSTASH_JDBC_DRIVER=com.mysql.jdbc.Driver
+      - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mysql-connector-java.jar
+      - LOGSTASH_JDBC_USERNAME=admin
+      - LOGSTASH_JDBC_PASSWORD=admin
+      - LOGSTASH_ELASTICSEARCH_HOST=http://elasticsearch:9200
+    ports: 
+      - 9600:9600
+      - 5044:5044
+    networks:
+      - logstash_network
+    volumes: 
+      - ./logstash/jdbc-input-plugin.conf:/usr/share/logstash/pipeline/logstash.conf
+    depends_on: 
+      - elasticsearch
+      - kibana
+      - flyway
+      - mysql
+volumes:
+  elasticsearch_data:
+  filebeat_data:
+  mysql_data:
+networks:
+  logstash_network:
