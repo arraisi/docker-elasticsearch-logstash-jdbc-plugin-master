@@ -1,7 +1,7 @@
 version: '3.6'
 services:
-  mysql:
-    image: mysql:5.7
+  mariadb:
+    image: mariadb:10.4
     ports: 
       - 3306:3306
     environment:
@@ -10,12 +10,12 @@ services:
       - MYSQL_USER=admin
       - MYSQL_PASSWORD=admin
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     networks: 
       - logstash_network
   flyway:
     image: boxfuse/flyway
-    command: -url=jdbc:mysql://mysql:3306/example?useSSL=false -schemas=example -user=admin -password=admin -driver=com.mysql.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
+    command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=password -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
     environment:
       - FLYWAY_EDITION=community
     volumes:
@@ -23,7 +23,7 @@ services:
     networks: 
       - logstash_network
     depends_on: 
-      - mysql
+      - mariadb
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
     ports:
@@ -50,12 +50,13 @@ services:
     build: ./logstash/
     image: dimmaryanto93/logstash-jdbc-plugin:1.1
     environment:
-      - LOGSTASH_JDBC_URL=jdbc:mysql://mysql:3306/example?useSSL=false
-      - LOGSTASH_JDBC_DRIVER=com.mysql.jdbc.Driver
-      - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mysql-connector-java.jar
-      - LOGSTASH_JDBC_USERNAME=admin
-      - LOGSTASH_JDBC_PASSWORD=admin
+      - LOGSTASH_JDBC_URL=jdbc:mariadb://mariadb:3306/example?useSSL=false
+      - LOGSTASH_JDBC_DRIVER=org.mariadb.jdbc.Driver
+      - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mariadb-java-client.jar
+      - LOGSTASH_JDBC_USERNAME=root
+      - LOGSTASH_JDBC_PASSWORD=password
       - LOGSTASH_ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
     ports: 
       - 9600:9600
       - 5044:5044
@@ -67,10 +68,9 @@ services:
       - elasticsearch
       - kibana
       - flyway
-      - mysql
+      - mariadb
 volumes:
   elasticsearch_data:
-  filebeat_data:
-  mysql_data:
+  mariadb_data:
 networks:
   logstash_network:
