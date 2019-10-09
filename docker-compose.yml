@@ -11,11 +11,12 @@ services:
       - MYSQL_PASSWORD=admin
     volumes:
       - mariadb_data:/var/lib/mysql
+      - ./mysql/init.sql:/data/application/init.sql
     networks: 
       - logstash_network
   flyway:
     image: boxfuse/flyway
-    command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=password -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
+    command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=admin -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
     environment:
       - FLYWAY_EDITION=community
     volumes:
@@ -54,7 +55,7 @@ services:
       - LOGSTASH_JDBC_DRIVER=org.mariadb.jdbc.Driver
       - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mariadb-java-client.jar
       - LOGSTASH_JDBC_USERNAME=root
-      - LOGSTASH_JDBC_PASSWORD=password
+      - LOGSTASH_JDBC_PASSWORD=admin
       - LOGSTASH_ELASTICSEARCH_HOST=http://elasticsearch:9200
       - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
     ports: 
