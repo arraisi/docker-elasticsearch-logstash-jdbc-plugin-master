@@ -1,4 +1,9 @@
-FROM docker.elastic.co/logstash/logstash:6.5.4
+
+#
+# Lockdown to version 6.5.4
+#
+ARG VERSION=6.5.4
+FROM docker.elastic.co/logstash/logstash:${VERSION}
 
 #
 # Define Logstash plugins path
@@ -16,9 +21,14 @@ RUN ${LOGSTASH_PLUGIN_PATH} install logstash-filter-mutate
 #
 # Copy logstash configuration
 #
-COPY ./logstash.yml /usr/share/logstash/config/logstash.yml
+COPY ./config/logstash.yml /usr/share/logstash/config/logstash.yml
 
 #
 # Copy the mariadb JDBC client
 #
-COPY ./mariadb-java-client-2.4.4.jar /usr/share/logstash/mariadb-java-client.jar
+COPY ./dependencies/mariadb-java-client-2.4.4.jar /usr/share/logstash/mariadb-java-client.jar
+
+#
+# Copy the pipeline that we are executing
+#
+COPY ./pipeline/jdbc-input-plugin.conf /usr/share/logstash/pipeline/logstash.conf
