@@ -23,7 +23,7 @@ services:
       - MYSQL_ROOT_PASSWORD=admin
     volumes:
       - ./flyway/sql/:/flyway/sql/
-    entrypoint: ["bash", "/flyway/bin/wait-for-mariadb.sh", "my_sql_percona", "--", "flyway"]
+    entrypoint: ["bash", "/flyway/bin/wait-for-mariadb.sh", "mariadb", "--", "flyway"]
     command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=admin -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
     networks: 
       - logstash_network
