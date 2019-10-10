@@ -11,7 +11,7 @@ services:
       - MYSQL_PASSWORD=admin
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./mysql/init.sql:/data/application/init.sql
+      - ./mysql/initial.sql:/data/application/init.sql
     networks: 
       - logstash_network
   flyway:
@@ -25,53 +25,116 @@ services:
       - logstash_network
     depends_on: 
       - mariadb
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.4
-    ports:
-      - 9300:9300
-      - 9200:9200
+
+  elasticsearch-one:
+    container_name: elasticsearch-one
+    image: elastic-oss
+    build: ./elasticsearch
     environment:
-      - transport.host=127.0.0.1
-      - cluster.name=docker-cluster
-      - discovery.type=single-node
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      transport.host: "0.0.0.0"
+      cluster.name: "elasticsearch-cluster"
+      node.name: "elasticsearch-one"
+      discovery.seed_hosts: "elasticsearch-one,elasticsearch-two"
+      cluster.initial_master_nodes: "elasticsearch-one,elasticsearch-two"
+      bootstrap.memory_lock: "true" # along with the memlock settings below, disables swapping
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      opendistro_security.ssl.http.enabled: "false"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
+        hard: 65536
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_one_data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9600:9600
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - logstash_network
+
+  elasticsearch-two:
+    container_name: elasticsearch-two
+    image: elastic-oss
+    build: ./elasticsearch
+    environment:
+      transport.host: "0.0.0.0"
+      cluster.name: "elasticsearch-cluster"
+      node.name: "elasticsearch-two"
+      discovery.seed_hosts: "elasticsearch-one,elasticsearch-two"
+      cluster.initial_master_nodes: "elasticsearch-one,elasticsearch-two"
+      bootstrap.memory_lock: "true" # along with the memlock settings below, disables swapping
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      opendistro_security.ssl.http.enabled: "false"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
+        hard: 65536
+    volumes:
+      - elasticsearch_two_data:/usr/share/elasticsearch/data
+    networks:
+      - logstash_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   kibana:
-    image: docker.elastic.co/kibana/kibana:6.5.4
+    image: kibana-oss
+    build: ./kibana
+    environment:
+      server.host: "0.0.0.0"
+      ELASTICSEARCH_TARGET_INSTANCE_ONE: "http://elasticsearch-one:9200"
+      ELASTICSEARCH_TARGET_INSTANCE_TWO: "http://elasticsearch-two:9200"
+      KIBANA_USERNAME: "kibanaserver"
+      KIBANA_PASSWORD: "kibanaserver"
     ports:
       - 5601:5601
     networks:
       - logstash_network
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-f", "http://0.0.0.0:5601"]
+      retries: 6
     depends_on: 
-      - elasticsearch
+      - elasticsearch-one
+      - elasticsearch-two
   logstash:
     build: ./logstash/
-    image: dimmaryanto93/logstash-jdbc-plugin:1.1
+    image: logstash-oss
     environment:
       - LOGSTASH_JDBC_URL=jdbc:mariadb://mariadb:3306/example?useSSL=false
       - LOGSTASH_JDBC_DRIVER=org.mariadb.jdbc.Driver
       - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mariadb-java-client.jar
       - LOGSTASH_JDBC_USERNAME=root
       - LOGSTASH_JDBC_PASSWORD=admin
-      - LOGSTASH_ELASTICSEARCH_HOST=http://elasticsearch:9200
+      - LOGSTASH_ELASTICSEARCH_HOST_ONE=http://elasticsearch-one:9200
+      - LOGSTASH_ELASTICSEARCH_HOST_TWO=http://elasticsearch-two:9200
       - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
     ports: 
-      - 9600:9600
+      - 9799:9600
       - 5044:5044
     networks:
       - logstash_network
     volumes: 
-      - ./logstash/jdbc-input-plugin.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./logstash/pipeline/jdbc-input-plugin.conf:/usr/share/logstash/pipeline/logstash.conf
     depends_on: 
-      - elasticsearch
+      - elasticsearch-one
+      - elasticsearch-two
       - kibana
       - flyway
       - mariadb
 volumes:
-  elasticsearch_data:
+  elasticsearch_one_data:
+  elasticsearch_two_data:
   mariadb_data:
 networks:
   logstash_network:
