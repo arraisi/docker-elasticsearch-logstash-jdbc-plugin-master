@@ -1,7 +1,8 @@
 version: '3.6'
 services:
   mariadb:
-    image: mariadb:10.4
+    image: mariadb-oss
+    build: ./mariadb
     ports: 
       - 3306:3306
     environment:
@@ -15,12 +16,15 @@ services:
     networks: 
       - logstash_network
   flyway:
-    image: boxfuse/flyway
-    command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=admin -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
+    image: flyway-oss
+    build: ./flyway
     environment:
       - FLYWAY_EDITION=community
+      - MYSQL_ROOT_PASSWORD=admin
     volumes:
       - ./flyway/sql/:/flyway/sql/
+    entrypoint: ["bash", "/flyway/bin/wait-for-mariadb.sh", "my_sql_percona", "--", "flyway"]
+    command: -url=jdbc:mariadb://mariadb:3306/example?useSSL=false -schemas=example -user=root -password=admin -driver=org.mariadb.jdbc.Driver -connectRetries=60  -cleanOnValidationError=true -baselineOnMigrate=true migrate
     networks: 
       - logstash_network
     depends_on: 
