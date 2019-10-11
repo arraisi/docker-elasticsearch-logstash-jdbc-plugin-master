@@ -1,5 +1,5 @@
 server.name: kibana
-server.host: "0"
+server.host: "0.0.0.0"
 
 server.cors: true
 server.cors.origin: ["*"]
@@ -32,11 +32,8 @@ server.cors.additionalExposedHeaders: ["kbn-xsrf", "kbn-version"]
 
 elasticsearch.hosts:
   - ${ELASTICSEARCH_TARGET_INSTANCE_ONE}
-  - ${ELASTICSEARCH_TARGET_INSTANCE_TWO}
 elasticsearch.ssl.verificationMode: none
-elasticsearch.username: ${KIBANA_USERNAME}
-elasticsearch.password: ${KIBANA_PASSWORD}
-opendistro_security.multitenancy.enabled: true
+opendistro_security.multitenancy.enabled: false
 
 elasticsearch.requestHeadersWhitelist:
   [
