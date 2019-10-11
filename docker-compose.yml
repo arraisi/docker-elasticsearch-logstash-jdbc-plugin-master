@@ -35,14 +35,13 @@ services:
     image: elastic-oss
     build: ./elasticsearch
     environment:
-      transport.host: "0.0.0.0"
-      cluster.name: "elasticsearch-cluster"
-      node.name: "elasticsearch-one"
-      discovery.seed_hosts: "elasticsearch-one,elasticsearch-two"
-      cluster.initial_master_nodes: "elasticsearch-one,elasticsearch-two"
-      bootstrap.memory_lock: "true" # along with the memlock settings below, disables swapping
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      opendistro_security.ssl.http.enabled: "false"
+      - cluster.name=elasticsearch-cluster
+      - node.name=elasticsearch-one"
+      - discovery.seed_hosts=elasticsearch-one,elasticsearch-two
+      - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - opendistro_security.ssl.http.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -68,14 +67,13 @@ services:
     image: elastic-oss
     build: ./elasticsearch
     environment:
-      transport.host: "0.0.0.0"
-      cluster.name: "elasticsearch-cluster"
-      node.name: "elasticsearch-two"
-      discovery.seed_hosts: "elasticsearch-one,elasticsearch-two"
-      cluster.initial_master_nodes: "elasticsearch-one,elasticsearch-two"
-      bootstrap.memory_lock: "true" # along with the memlock settings below, disables swapping
-      ES_JAVA_OPTS: "-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
-      opendistro_security.ssl.http.enabled: "false"
+      - cluster.name=elasticsearch-cluster
+      - node.name=elasticsearch-one"
+      - discovery.seed_hosts=elasticsearch-one,elasticsearch-two
+      - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
+      - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      - opendistro_security.ssl.http.enabled=false
     ulimits:
       memlock:
         soft: -1
@@ -96,11 +94,17 @@ services:
     image: kibana-oss
     build: ./kibana
     environment:
-      server.host: "0.0.0.0"
-      ELASTICSEARCH_TARGET_INSTANCE_ONE: "http://elasticsearch-one:9200"
-      ELASTICSEARCH_TARGET_INSTANCE_TWO: "http://elasticsearch-two:9200"
-      KIBANA_USERNAME: "kibanaserver"
-      KIBANA_PASSWORD: "kibanaserver"
+      - ELASTICSEARCH_TARGET_INSTANCE_ONE=http://elasticsearch-one:9200
+      - ELASTICSEARCH_TARGET_INSTANCE_TWO=http://elasticsearch-two:9200
+      - ELASTICSEARCH_USERNAME=admin
+      - ELASTICSEARCH_PASSWORD=admin
+      - WAIT_COMMAND=[ $$(curl --write-out %{http_code} --silent --output /dev/null http://admin:admin@elasticsearch-one:9200/_cluster/health?pretty=true&wait_for_status=green) = 200 ]
+      - WAIT_START_CMD=/usr/local/bin/kibana-docker
+      - WAIT_SLEEP=2
+      - WAIT_LOOPS=1000
+    command: sh wait-to-start.sh
+    # volumes:
+      # - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
       - 5601:5601
     networks:
@@ -118,10 +122,12 @@ services:
       - LOGSTASH_JDBC_URL=jdbc:mariadb://mariadb:3306/example?useSSL=false
       - LOGSTASH_JDBC_DRIVER=org.mariadb.jdbc.Driver
       - LOGSTASH_JDBC_DRIVER_JAR_LOCATION=mariadb-java-client.jar
+      - LOGSTASH_ELASTICSEARCH_USER=admin
+      - LOGSTASH_ELASTICSEARCH_PASSWORD=admin
       - LOGSTASH_JDBC_USERNAME=root
       - LOGSTASH_JDBC_PASSWORD=admin
-      - LOGSTASH_ELASTICSEARCH_HOST_ONE=http://elasticsearch-one:9200
-      - LOGSTASH_ELASTICSEARCH_HOST_TWO=http://elasticsearch-two:9200
+      - LOGSTASH_ELASTICSEARCH_HOST_ONE=elasticsearch-one:9200
+      - LOGSTASH_ELASTICSEARCH_HOST_TWO=elasticsearch-two:9200
       - "LS_JAVA_OPTS=-Xms512m -Xmx512m"
     ports: 
       - 9799:9600
