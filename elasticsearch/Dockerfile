@@ -81,8 +81,8 @@ COPY ${LOCAL_OPENDISTRO_SECURITY_CONFIGURATION_FOLDER}/roles_mapping.yml \
 COPY ${LOCAL_OPENDISTRO_SECURITY_CONFIGURATION_FOLDER}/action_groups.yml \
     ${LOCAL_OPENDISTRO_SECURITY_CONFIGURATION_FOLDER}/action_groups.yml
 
-#
-# Copy elastic security configuration file
-#
-COPY ${LOCAL_OPENDISTRO_CONFIGURATION_FOLDER}/config.yml \
-    ${LOCAL_OPENDISTRO_SECURITY_CONFIGURATION_FOLDER}/config.yml
+# #
+# # Copy elastic security configuration file
+# #
+# COPY ${LOCAL_OPENDISTRO_CONFIGURATION_FOLDER}/config.yml \
+#     ${LOCAL_OPENDISTRO_SECURITY_CONFIGURATION_FOLDER}/config.yml

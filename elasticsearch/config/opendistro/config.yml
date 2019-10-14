@@ -33,6 +33,4 @@ opendistro_security.restapi.roles_enabled: ["all_access", "security_rest_api_acc
 
 
 cluster.routing.allocation.disk.threshold_enabled: false
-opendistro_security.audit.config.disabled_rest_categories: NONE
-opendistro_security.audit.config.disabled_transport_categories: NONE
 node.max_local_storage_nodes: 3

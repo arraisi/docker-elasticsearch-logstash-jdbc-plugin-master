@@ -15,14 +15,14 @@ opendistro_security.advanced_modules_enabled: true
 # Specify a list of DNs which denote the other nodes in the cluster.
 # This settings support wildcards and regular expressions
 # This setting only has effect if 'opendistro_security.cert.intercluster_request_evaluator_class' is not set.
-opendistro_security.nodes_dn:
-  - "CN=*.example.com, OU=SSL, O=Test, L=Test, C=DE"
-  - "CN=node.other.com, OU=SSL, O=Test, L=Test, C=DE"
+# opendistro_security.nodes_dn:
+#   - "CN=*.example.com, OU=SSL, O=Test, L=Test, C=DE"
+#   - "CN=node.other.com, OU=SSL, O=Test, L=Test, C=DE"
 
 # Defines the DNs (distinguished names) of certificates
 # to which admin privileges should be assigned (mandatory)
-opendistro_security.authcz.admin_dn:
-  - "CN=kirk,OU=client,O=client,l=tEst, C=De"
+# opendistro_security.authcz.admin_dn:
+  # - "CN=kirk,OU=client,O=client,l=tEst, C=De"
 
 # Define how backend roles should be mapped to Open Distro Security roles
 # MAPPING_ONLY - mappings must be configured explicitely in roles_mapping.yml (default)

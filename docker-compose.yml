@@ -36,7 +36,7 @@ services:
     build: ./elasticsearch
     environment:
       - cluster.name=elasticsearch-cluster
-      - node.name=elasticsearch-one"
+      - node.name=elasticsearch-one
       - discovery.seed_hosts=elasticsearch-one,elasticsearch-two
       - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
       - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
@@ -68,7 +68,7 @@ services:
     build: ./elasticsearch
     environment:
       - cluster.name=elasticsearch-cluster
-      - node.name=elasticsearch-one"
+      - node.name=elasticsearch-two
       - discovery.seed_hosts=elasticsearch-one,elasticsearch-two
       - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
       - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
@@ -83,6 +83,7 @@ services:
         hard: 65536
     volumes:
       - elasticsearch_two_data:/usr/share/elasticsearch/data
+      # - ./elasticsearch/config/kibana.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
     networks:
       - logstash_network
     healthcheck:
@@ -94,17 +95,18 @@ services:
     image: kibana-oss
     build: ./kibana
     environment:
+      - server.ssl.enabled=false
       - ELASTICSEARCH_TARGET_INSTANCE_ONE=http://elasticsearch-one:9200
       - ELASTICSEARCH_TARGET_INSTANCE_TWO=http://elasticsearch-two:9200
-      - ELASTICSEARCH_USERNAME=admin
-      - ELASTICSEARCH_PASSWORD=admin
+      - ELASTICSEARCH_USERNAME=kibanaserver
+      - ELASTICSEARCH_PASSWORD=kibanaserver
       - WAIT_COMMAND=[ $$(curl --write-out %{http_code} --silent --output /dev/null http://admin:admin@elasticsearch-one:9200/_cluster/health?pretty=true&wait_for_status=green) = 200 ]
       - WAIT_START_CMD=/usr/local/bin/kibana-docker
       - WAIT_SLEEP=2
       - WAIT_LOOPS=1000
     command: sh wait-to-start.sh
-    # volumes:
-      # - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+    volumes:
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
       - 5601:5601
     networks:
