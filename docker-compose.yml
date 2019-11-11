@@ -33,7 +33,7 @@ services:
   elasticsearch-one:
     container_name: elasticsearch-one
     image: elastic-oss
-    build: ./elasticsearch
+    build: ./search/elasticsearch
     environment:
       - cluster.name=elasticsearch-cluster
       - node.name=elasticsearch-one
@@ -61,17 +61,17 @@ services:
       #
       # Map elasticsearch configuration file - OpenDistro global config file
       # This causes issues when loaded (if ssl is disabled)
-      # - ./elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      # - ./search/elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 
 
       #
       # Map elasticsearch configuration files - OpenDistro security plugin configuration files
       #    
-      - ./elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
-      - ./elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
-      - ./elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
-      - ./elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
-      - ./elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
+      - ./search/elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
+      - ./search/elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
+      - ./search/elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
+      - ./search/elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
+      - ./search/elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
 
       - elasticsearch_one_data:/usr/share/elasticsearch/data
     ports:
@@ -88,7 +88,7 @@ services:
   elasticsearch-two:
     container_name: elasticsearch-two
     image: elastic-oss
-    build: ./elasticsearch
+    build: ./search/elasticsearch
     environment:
       - cluster.name=elasticsearch-cluster
       - node.name=elasticsearch-two
@@ -115,17 +115,17 @@ services:
       #
       # Map elasticsearch configuration file - OpenDistro global config file
       # This causes issues when loaded (if ssl is disabled)
-      # - ./elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      # - ./search/elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 
 
       #
       # Map elasticsearch configuration files - OpenDistro security plugin configuration files
       #    
-      - ./elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
-      - ./elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
-      - ./elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
-      - ./elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
-      - ./elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
+      - ./search/elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
+      - ./search/elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
+      - ./search/elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
+      - ./search/elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
+      - ./search/elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
 
       - elasticsearch_two_data:/usr/share/elasticsearch/data
     networks:
@@ -137,7 +137,7 @@ services:
       retries: 5
   kibana:
     image: kibana-oss
-    build: ./kibana
+    build: ./search/kibana
     environment:
       #
       # Disable SSL
@@ -153,7 +153,7 @@ services:
       - WAIT_LOOPS=1000
     command: sh wait-to-start.sh
     volumes:
-      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./search/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
       - 5601:5601
     networks:
@@ -165,7 +165,7 @@ services:
       - elasticsearch-one
       - elasticsearch-two
   logstash:
-    build: ./logstash/
+    build: ./search/logstash/
     image: logstash-oss
     environment:
       - LOGSTASH_JDBC_URL=jdbc:mariadb://mariadb:3306/example?useSSL=false
@@ -184,7 +184,7 @@ services:
     networks:
       - logstash_network
     volumes: 
-      - ./logstash/pipeline/jdbc-input-plugin.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./search/logstash/pipeline/jdbc-input-plugin.conf:/usr/share/logstash/pipeline/logstash.conf
     depends_on: 
       - elasticsearch-one
       - elasticsearch-two
