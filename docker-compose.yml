@@ -12,7 +12,7 @@ services:
       - MYSQL_PASSWORD=admin
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./mysql/initial.sql:/data/application/init.sql
+      - ./mariadb/init-database.sql:/data/application/init.sql
     networks: 
       - logstash_network
   flyway:
@@ -41,6 +41,9 @@ services:
       - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
       - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      #
+      # Disable SSL
+      #
       - opendistro_security.ssl.http.enabled=false
     ulimits:
       memlock:
@@ -50,6 +53,26 @@ services:
         soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
         hard: 65536
     volumes:
+
+      #
+      # Mapping of the configuration files so we can also have control @ runtime time not only @ build time
+      #
+
+      #
+      # Map elasticsearch configuration file - OpenDistro global config file
+      #
+      # - ./elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+
+      #
+      # Map elasticsearch configuration files - OpenDistro security plugin configuration files
+      #    
+      - ./elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
+      - ./elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
+      - ./elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
+      - ./elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
+      - ./elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
+
       - elasticsearch_one_data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
@@ -73,6 +96,9 @@ services:
       - cluster.initial_master_nodes=elasticsearch-one,elasticsearch-two
       - bootstrap.memory_lock=true # along with the memlock settings below, disables swapping
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # minimum and maximum Java heap size, recommend setting both to 50% of system RAM
+      #
+      # Disable SSL
+      #
       - opendistro_security.ssl.http.enabled=false
     ulimits:
       memlock:
@@ -82,8 +108,26 @@ services:
         soft: 65536 # maximum number of open files for the Elasticsearch user, set to at least 65536 on modern systems
         hard: 65536
     volumes:
+      #
+      # Mapping of the configuration files so we can also have control @ runtime time not only @ build time
+      #
+
+      #
+      # Map elasticsearch configuration file - OpenDistro global config file
+      #
+      # - ./elasticsearch/config/opendistro/config.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+
+      #
+      # Map elasticsearch configuration files - OpenDistro security plugin configuration files
+      #    
+      - ./elasticsearch/config/opendistro_security/internal_users.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
+      - ./elasticsearch/config/opendistro_security/roles_mapping.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles_mapping.yml
+      - ./elasticsearch/config/opendistro_security/tenants.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/tenants.yml
+      - ./elasticsearch/config/opendistro_security/roles.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/roles.yml
+      - ./elasticsearch/config/opendistro_security/action_groups.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/action_groups.yml
+
       - elasticsearch_two_data:/usr/share/elasticsearch/data
-      # - ./elasticsearch/config/kibana.yml:/usr/share/elasticsearch/plugins/opendistro_security/securityconfig/internal_users.yml
     networks:
       - logstash_network
     healthcheck:
@@ -95,6 +139,9 @@ services:
     image: kibana-oss
     build: ./kibana
     environment:
+      #
+      # Disable SSL
+      #
       - server.ssl.enabled=false
       - ELASTICSEARCH_TARGET_INSTANCE_ONE=http://elasticsearch-one:9200
       - ELASTICSEARCH_TARGET_INSTANCE_TWO=http://elasticsearch-two:9200
